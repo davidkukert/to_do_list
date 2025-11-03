@@ -1,0 +1,55 @@
+[project]
+name = "to-do-list"
+version = "0.1.0"
+description = "A simple project the 'To do list'"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "aiosqlite>=0.21.0",
+    "alembic>=1.17.1",
+    "fastapi[standard]>=0.120.2",
+    "pydantic-settings>=2.11.0",
+    "sqlalchemy[asyncio]>=2.0.44",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.11.0",
+    "httpx>=0.28.1",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.2",
+]
+
+[tool.ruff]
+line-length = 79
+extend-exclude = ['migrations']
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT', 'FAST']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'
+
+[tool.pytest.ini_options]
+pythonpath = "."
+addopts = '-p no:warnings'
+asyncio_mode = 'auto'
+asyncio_default_fixture_loop_scope = 'session'
+
+[tool.coverage.run]
+core = "ctrace"
+concurrency = ["thread", "greenlet"]
+
+[tool.taskipy.tasks]
+lint = 'ruff check'
+pre_format = 'ruff check --fix'
+format = 'ruff format'
+run = 'fastapi dev src/app.py'
+pre_test = 'task format'
+test = 'pytest -s -x --cov=src -vv'
+post_test = 'coverage html'
+
