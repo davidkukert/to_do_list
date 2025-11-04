@@ -54,7 +54,7 @@ async def test_update_user(client, user):
 
     response = await client.put(
         f'/users/{user.id}',
-        json=dict(username=new_username),
+        json=dict(username=new_username, password='12345678'),
     )
 
     data = response.json()['data']

@@ -49,6 +49,7 @@ async def create_user(data: UserCreateInput, session: Session):
         raise HTTPException(409, 'Username not available')
 
     user = User(**data.model_dump())
+    user.hash_password()
     session.add(user)
     await session.commit()
     await session.refresh(user)
@@ -78,6 +79,9 @@ async def update_user(user_id: UUID, data: UserUpdateInput, session: Session):
 
     for key, value in data.model_dump(exclude_none=True).items():
         setattr(user, key, value)
+
+    if data.password is not None:
+        user.hash_password()
 
     session.add(user)
     await session.commit()

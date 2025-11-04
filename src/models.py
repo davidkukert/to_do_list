@@ -4,6 +4,8 @@ from uuid import UUID, uuid8
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
+from src.security import hash_password
+
 table_register = registry()
 
 
@@ -23,3 +25,6 @@ class User:
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now(), init=False
     )
+
+    def hash_password(self):
+        self.password = hash_password(self.password)
