@@ -12,6 +12,7 @@ from src.schemas import (
     UserResponse,
     UserUpdateInput,
 )
+from src.security.auth import CurrentUser
 
 router = APIRouter(
     prefix='/users',
@@ -57,12 +58,20 @@ async def create_user(data: UserCreateInput, session: Session):
 
 
 @router.put('/{user_id}', response_model=UserResponse)
-async def update_user(user_id: UUID, data: UserUpdateInput, session: Session):
+async def update_user(
+    user_id: UUID,
+    data: UserUpdateInput,
+    session: Session,
+    current_user: CurrentUser,
+):
     user = await session.execute(select(User).where(User.id == user_id))
     user = user.scalar_one_or_none()
 
     if user is None:
         raise HTTPException(404, 'User not found')
+
+    if current_user.id != user_id:
+        raise HTTPException(403, 'Forbidden')
 
     if data.username is not None and data.username != user.username:
         username_already_taken = (
@@ -91,12 +100,19 @@ async def update_user(user_id: UUID, data: UserUpdateInput, session: Session):
 
 
 @router.delete('/{user_id}', response_model=MessageResponse)
-async def delete_user(user_id: UUID, session: Session):
+async def delete_user(
+    user_id: UUID,
+    session: Session,
+    current_user: CurrentUser,
+):
     user = await session.execute(select(User).where(User.id == user_id))
     user = user.scalar_one_or_none()
 
     if user is None:
         raise HTTPException(404, 'User not found')
+
+    if current_user.id != user_id:
+        raise HTTPException(403, 'Forbidden')
 
     await session.delete(user)
     await session.commit()

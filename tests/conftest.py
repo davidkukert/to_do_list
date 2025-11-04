@@ -1,5 +1,9 @@
+from contextlib import contextmanager
+from datetime import datetime
+
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.app import app
@@ -48,6 +52,7 @@ async def client(session):
 @pytest.fixture(scope='session')
 async def user(session):
     user = User(username='test', password='12345678')
+    user.hash_password()
     session.add(user)
     await session.commit()
     await session.refresh(user)
@@ -57,7 +62,46 @@ async def user(session):
 @pytest.fixture(scope='session')
 async def another_user(session):
     user = User(username='test2', password='12345678')
+    user.hash_password()
     session.add(user)
     await session.commit()
     await session.refresh(user)
     return user
+
+
+@contextmanager
+def _mock_db_time(*, model, time=datetime(2024, 1, 1)):
+    def fake_time_handler(mapper, connection, target):
+        if hasattr(target, 'created_at'):
+            target.created_at = time
+        if hasattr(target, 'updated_at'):
+            target.updated_at = time
+
+    event.listen(model, 'before_insert', fake_time_handler)
+
+    yield time
+
+    event.remove(model, 'before_insert', fake_time_handler)
+
+
+@pytest.fixture
+def mock_db_time():
+    return _mock_db_time
+
+
+@pytest.fixture
+async def token(client, user):
+    response = await client.post(
+        '/auth/token',
+        data={'username': user.username, 'password': '12345678'},
+    )
+    return response.json()['accessToken']
+
+
+@pytest.fixture
+async def another_token(client, another_user):
+    response = await client.post(
+        '/auth/token',
+        data={'username': another_user.username, 'password': '12345678'},
+    )
+    return response.json()['accessToken']

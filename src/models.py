@@ -4,7 +4,7 @@ from uuid import UUID, uuid8
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
-from src.security import hash_password
+from src.security.hash import hash_password, verify_password
 
 table_register = registry()
 
@@ -28,3 +28,6 @@ class User:
 
     def hash_password(self):
         self.password = hash_password(self.password)
+
+    def verify_password(self, password: str) -> bool:
+        return verify_password(password, self.password)

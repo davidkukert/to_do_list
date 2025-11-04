@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 
@@ -13,6 +13,11 @@ class BasicModel(BaseModel):
 
 class MessageResponse(BasicModel):
     message: str
+
+
+class TokenResponse(BasicModel):
+    access_token: str
+    token_type: str = Field(default='bearer')
 
 
 class UserCreateInput(BasicModel):
