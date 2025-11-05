@@ -1,11 +1,11 @@
 import asyncio
 from http import HTTPStatus
-from uuid import uuid8
+from uuid import uuid7, uuid8
 
 from src.schemas import UserCreateInput, UserSchema
 
 
-async def test_index_users(client, user):
+async def test_index_users(client, user, another_user):
     response = await client.get('/users/')
     assert response.status_code == HTTPStatus.OK
     assert response.json() == dict(
@@ -15,7 +15,13 @@ async def test_index_users(client, user):
                 username=user.username,
                 createdAt=user.created_at.isoformat(),
                 updatedAt=user.updated_at.isoformat(),
-            )
+            ),
+            dict(
+                id=str(another_user.id),
+                username=another_user.username,
+                createdAt=another_user.created_at.isoformat(),
+                updatedAt=another_user.updated_at.isoformat(),
+            ),
         ]
     )
 
@@ -34,7 +40,9 @@ async def test_get_user_not_found(client):
 
 
 async def test_create_user(client):
-    user_data = UserCreateInput(username='test1', password='12345678')
+    user_data = UserCreateInput(
+        username=f'test1{uuid7()}', password='12345678'
+    )
     response = await client.post(
         '/users/', json=user_data.model_dump(by_alias=True)
     )

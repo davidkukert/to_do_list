@@ -13,8 +13,8 @@ async def test_get_token(client, user):
     token = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    assert 'accessToken' in token
-    assert 'tokenType' in token
+    assert 'access_token' in token
+    assert 'token_type' in token
 
 
 async def test_token_expired_after_time(client, user):

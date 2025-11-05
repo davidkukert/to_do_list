@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.app import app
 from src.db import get_session
-from src.models import User, table_register
+from src.models import table_register
+from tests.factories import UserFactory
 
 
 @pytest.fixture(scope='session')
@@ -51,21 +52,25 @@ async def client(session):
 
 @pytest.fixture(scope='session')
 async def user(session):
-    user = User(username='test', password='12345678')
+    password = '12345678'
+    user = UserFactory(password=password)
     user.hash_password()
     session.add(user)
     await session.commit()
     await session.refresh(user)
+    user.clean_password = password
     return user
 
 
 @pytest.fixture(scope='session')
 async def another_user(session):
-    user = User(username='test2', password='12345678')
+    password = '12345678'
+    user = UserFactory(password=password)
     user.hash_password()
     session.add(user)
     await session.commit()
     await session.refresh(user)
+    user.clean_password = password
     return user
 
 
@@ -93,15 +98,18 @@ def mock_db_time():
 async def token(client, user):
     response = await client.post(
         '/auth/token',
-        data={'username': user.username, 'password': '12345678'},
+        data={'username': user.username, 'password': user.clean_password},
     )
-    return response.json()['accessToken']
+    return response.json()['access_token']
 
 
 @pytest.fixture
 async def another_token(client, another_user):
     response = await client.post(
         '/auth/token',
-        data={'username': another_user.username, 'password': '12345678'},
+        data={
+            'username': another_user.username,
+            'password': another_user.clean_password,
+        },
     )
-    return response.json()['accessToken']
+    return response.json()['access_token']

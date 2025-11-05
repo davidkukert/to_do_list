@@ -4,6 +4,8 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from src.enums import ToDoStatus
+
 
 class BasicModel(BaseModel):
     model_config = ConfigDict(
@@ -15,7 +17,7 @@ class MessageResponse(BasicModel):
     message: str
 
 
-class TokenResponse(BasicModel):
+class TokenResponse(BaseModel):
     access_token: str
     token_type: str = Field(default='bearer')
 
@@ -43,3 +45,40 @@ class UserResponse(BasicModel):
 
 class UserList(BasicModel):
     data: list[UserSchema]
+
+
+class ToDoCreateInput(BasicModel):
+    title: str
+    description: str | None = None
+    status: ToDoStatus = Field(default=ToDoStatus.TODO)
+
+
+class ToDoUpdateInput(BasicModel):
+    title: str | None = None
+    description: str | None = None
+    status: ToDoStatus | None = None
+
+
+class ToDoSchema(BasicModel):
+    id: uuid.UUID
+    title: str
+    description: str | None = None
+    status: ToDoStatus
+    user_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    done_at: datetime | None = None
+
+
+class ToDoResponse(BasicModel):
+    data: ToDoSchema
+
+
+class ToDoList(BasicModel):
+    data: list[ToDoSchema]
+
+
+class FilterToDo(BasicModel):
+    title: str | None = None
+    description: str | None = None
+    status: ToDoStatus | None = None
